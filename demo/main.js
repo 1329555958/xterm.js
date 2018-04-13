@@ -90,7 +90,14 @@ function createTerminal() {
 function runRealTerminal() {
   term.attach(socket);
   term._initialized = true;
-  changeToDir();
+  var dir_init = false;
+  term.on('data',function(data){
+    if(!dir_init){
+      console.log(data);
+      changeToDir();
+      dir_init = true;
+    }
+  });
 }
 
 function changeToDir(dir){
