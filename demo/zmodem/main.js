@@ -60,8 +60,6 @@ function createTerminal() {
 
   // fit is called within a setTimeout, cols and rows need this.
   setTimeout(function () {
-    colsElement.value = term.cols;
-    rowsElement.value = term.rows;
 
     // Set terminal size again to set the specific dimensions on the demo
     setTerminalSize();
