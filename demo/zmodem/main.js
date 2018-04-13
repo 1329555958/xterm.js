@@ -182,7 +182,7 @@ function _hide_progress() {
 var start_form = document.getElementById("zm_start");
 
 function _auto_zmodem() {
-    return document.getElementById("zmodem-auto").checked;
+    return true;
 }
 
 // END UI STUFF
