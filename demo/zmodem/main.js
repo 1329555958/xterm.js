@@ -43,6 +43,7 @@ function createTerminal() {
     if (!pid) {
       return;
     }
+    term.fit();
     var cols = size.cols,
       rows = size.rows,
       url = '/terminals/' + pid + '/size?cols=' + cols + '&rows=' + rows;
@@ -54,7 +55,6 @@ function createTerminal() {
 
   term.open(terminalContainer);
   setPadding();
-  term.fit();
   term.toggleFullScreen();
   term.focus();
 
