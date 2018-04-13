@@ -10,66 +10,23 @@ Terminal.applyAddon(fit);
 Terminal.applyAddon(attach);
 Terminal.applyAddon(zmodem);
 Terminal.applyAddon(search);
+Terminal.applyAddon(fullscreen);
 
 var terminalContainer = document.getElementById('terminal-container'),
-    actionElements = {
-      findNext: document.querySelector('#find-next'),
-      findPrevious: document.querySelector('#find-previous')
-    },
-    optionElements = {
-      cursorBlink: document.querySelector('#option-cursor-blink'),
-      cursorStyle: document.querySelector('#option-cursor-style'),
-      scrollback: document.querySelector('#option-scrollback'),
-      tabstopwidth: document.querySelector('#option-tabstopwidth'),
-      bellStyle: document.querySelector('#option-bell-style')
-    },
-    colsElement = document.getElementById('cols'),
-    rowsElement = document.getElementById('rows');
+  terminalHeader = document.getElementById('terminal-header');
 
 function setTerminalSize() {
-  var cols = parseInt(colsElement.value, 10);
-  var rows = parseInt(rowsElement.value, 10);
-  var viewportElement = document.querySelector('.xterm-viewport');
-  var scrollBarWidth = viewportElement.offsetWidth - viewportElement.clientWidth;
-  var width = (cols * term.charMeasure.width + 20 /*room for scrollbar*/).toString() + 'px';
-  var height = (rows * term.charMeasure.height).toString() + 'px';
-
+  var width = '100%';
+  var height ='800px';
   terminalContainer.style.width = width;
   terminalContainer.style.height = height;
-  term.resize(cols, rows);
+  term.fit();
 }
 
-colsElement.addEventListener('change', setTerminalSize);
-rowsElement.addEventListener('change', setTerminalSize);
-
-actionElements.findNext.addEventListener('keypress', function (e) {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    term.findNext(actionElements.findNext.value);
-  }
-});
-actionElements.findPrevious.addEventListener('keypress', function (e) {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    term.findPrevious(actionElements.findPrevious.value);
-  }
-});
-
-optionElements.cursorBlink.addEventListener('change', function () {
-  term.setOption('cursorBlink', optionElements.cursorBlink.checked);
-});
-optionElements.cursorStyle.addEventListener('change', function () {
-  term.setOption('cursorStyle', optionElements.cursorStyle.value);
-});
-optionElements.bellStyle.addEventListener('change', function () {
-  term.setOption('bellStyle', optionElements.bellStyle.value);
-});
-optionElements.scrollback.addEventListener('change', function () {
-  term.setOption('scrollback', parseInt(optionElements.scrollback.value, 10));
-});
-optionElements.tabstopwidth.addEventListener('change', function () {
-  term.setOption('tabStopWidth', parseInt(optionElements.tabstopwidth.value, 10));
-});
+function setPadding() {
+  term.element.style.padding = '10px';
+  term.fit();
+}
 
 createTerminal();
 
@@ -79,17 +36,16 @@ function createTerminal() {
     terminalContainer.removeChild(terminalContainer.children[0]);
   }
   term = new Terminal({
-    cursorBlink: optionElements.cursorBlink.checked,
-    scrollback: parseInt(optionElements.scrollback.value, 10),
-    tabStopWidth: parseInt(optionElements.tabstopwidth.value, 10)
+    scrollback: 1000
   });
+  window.term = term;  // Expose `term` to window for debugging purposes
   term.on('resize', function (size) {
     if (!pid) {
       return;
     }
     var cols = size.cols,
-        rows = size.rows,
-        url = '/terminals/' + pid + '/size?cols=' + cols + '&rows=' + rows;
+      rows = size.rows,
+      url = '/terminals/' + pid + '/size?cols=' + cols + '&rows=' + rows;
 
     fetch(url, {method: 'POST'});
   });
@@ -97,7 +53,11 @@ function createTerminal() {
   socketURL = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/terminals/';
 
   term.open(terminalContainer);
+  term.winptyCompatInit();
+  setPadding();
   term.fit();
+  term.toggleFullScreen();
+  term.focus();
 
   // fit is called within a setTimeout, cols and rows need this.
   setTimeout(function () {
@@ -344,8 +304,14 @@ function runRealTerminal() {
     term.attach(socket);
 
     term._initialized = true;
+    changeToDir('/opt');
 }
 
+function changeToDir(dir,file){
+  dir && term.send('cd '+dir+' \n');
+  file && term.send('tail -f '+file+' \n');
+
+}
 function runFakeTerminal() {
   if (term._initialized) {
     return;
