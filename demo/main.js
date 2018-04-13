@@ -90,18 +90,12 @@ function createTerminal() {
 function runRealTerminal() {
   term.attach(socket);
   term._initialized = true;
-  var dir_init = false;
-  term.on('data',function(data){
-    if(!dir_init){
-      console.log(data);
-      changeToDir();
-      dir_init = true;
-    }
-  });
+  changeToDir('/opt');
 }
 
-function changeToDir(dir){
-  term.writeln('cd /opt');
+function changeToDir(dir,file){
+  dir && term.send('cd '+dir+' \n');
+  file && term.send('tail -f '+file+' \n');
 }
 
 function runFakeTerminal() {
