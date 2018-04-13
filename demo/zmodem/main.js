@@ -31,6 +31,7 @@ function setPadding() {
 createTerminal();
 
 function createTerminal() {
+  window.onresize = function(){term.fit()};
   // Clean terminal
   while (terminalContainer.children.length) {
     terminalContainer.removeChild(terminalContainer.children[0]);
@@ -43,7 +44,6 @@ function createTerminal() {
     if (!pid) {
       return;
     }
-    term.fit();
     var cols = size.cols,
       rows = size.rows,
       url = '/terminals/' + pid + '/size?cols=' + cols + '&rows=' + rows;
